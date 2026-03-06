@@ -32,8 +32,6 @@ export default function HeroSection() {
         <span className="text-[10px] sm:text-xs font-body uppercase tracking-[0.2em] sm:tracking-[0.3em] text-burgundy/50 whitespace-nowrap">Septembrie</span>
         <div className="flex-1 h-px bg-gold/40" />
       </div>
-      <p className="font-heading text-lg text-burgundy/40 tracking-widest mb-6">2026</p>
-
       {/* Countdown */}
       <Countdown />
     </section>

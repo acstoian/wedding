@@ -33,9 +33,9 @@ export default function WhereSection() {
   return (
     <section id="where" className="py-10 md:py-12 text-burgundy text-center">
       <div className="max-w-3xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           {EVENTS.map((event) => (
-            <div key={event.type} className="text-center flex flex-col items-center">
+            <div key={event.type} className="text-center flex flex-col items-center h-full">
               <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-3">
                 {event.type}
               </p>
@@ -46,7 +46,7 @@ export default function WhereSection() {
               </p>
               <button
                 onClick={() => setMapQuery(event.mapQuery)}
-                className="inline-block px-5 py-1.5 border border-gold/60 text-gold text-xs uppercase tracking-widest font-body rounded-full hover:bg-gold hover:text-white transition-colors"
+                className="mt-auto inline-block px-5 py-1.5 border border-gold/60 text-gold text-xs uppercase tracking-widest font-body rounded-full hover:bg-gold hover:text-white transition-colors"
               >
                 Vezi pe hartă
               </button>
