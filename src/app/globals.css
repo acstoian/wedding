@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-burgundy: #722F37;
+  --color-burgundy-light: #8B3A42;
+  --color-burnt-orange: #CC5500;
+  --color-gold: #C5961B;
+  --color-gold-light: #D4A843;
+  --color-cream: #FEFBF3;
+  --color-cream-dark: #F5EDE0;
+  --color-sage: #9CAF88;
+  --color-sage-dark: #7A9466;
+  --color-forest-green: #2D4A22;
+  --color-forest-green-light: #4A6741;
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-body: "Lato", system-ui, sans-serif;
+  --font-script: "Great Vibes", cursive;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  color: #3D2B1F;
+  background-color: var(--color-cream);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+/* Fade-in animation on scroll */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Floral decorative elements */
+.floral-border {
+  position: relative;
+}
+
+.floral-border::before,
+.floral-border::after {
+  content: "✿";
+  font-size: 1.5rem;
+  color: var(--color-gold);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.floral-border::before {
+  left: -2rem;
+}
+
+.floral-border::after {
+  right: -2rem;
+}
+
+.thin-divider {
+  width: 80px;
+  height: 1px;
+  background-color: var(--color-gold);
+  margin: 1.5rem auto;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

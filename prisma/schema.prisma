@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guest {
+  id                  Int      @id @default(autoincrement())
+  name                String
+  email               String?
+  attending           String   @default("pending") // "yes", "no", "pending"
+  plusOne              Boolean  @default(false)
+  plusOneName          String?
+  menuPreference      String?  // "Normal" | "Vegetarian"
+  plusOneMenu         String?  // "Normal" | "Vegetarian"
+  allergies           String?  // allergy details, null if none
+  kidsCount           Int?     // number of kids, null if none
+  dietaryRestrictions String?  // legacy field
+  message             String?
+  tableId             Int?
+  table               Table?   @relation(fields: [tableId], references: [id])
+  createdAt           DateTime @default(now())
+}
+
+model Table {
+  id       Int     @id @default(autoincrement())
+  name     String
+  capacity Int     @default(8)
+  guests   Guest[]
+}
