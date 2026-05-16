@@ -142,24 +142,27 @@ export default function RsvpForm() {
 
   if (status === "success") {
     return (
-      <section id="rsvp" className="py-10 md:py-14 text-center">
-        <div className="max-w-lg mx-auto px-6">
-          <p className="font-script text-4xl text-gold mb-3">Mulțumim!</p>
-          <p className="font-body text-burgundy/60 text-sm">
+      <div className="fixed inset-0 z-50 bg-cream flex items-center justify-center px-6 py-10 overflow-y-auto">
+        <div className="w-full max-w-lg text-center text-burgundy">
+          <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-3">
+            Confirmare primită
+          </p>
+          <p className="font-script text-5xl sm:text-6xl text-gold mb-4">Mulțumim!</p>
+          <p className="font-body text-burgundy/70 text-sm sm:text-base px-2">
             Răspunsul tău a fost înregistrat. Abia așteptăm să ne vedem!
           </p>
 
           {attending && (
-            <div className="mt-8 pt-6 border-t border-gold/20">
-              <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-4">
+            <div className="mt-10 pt-8 border-t border-gold/20">
+              <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-5">
                 Adaugă în calendar
               </p>
-              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <div className="flex flex-col gap-2.5 max-w-xs mx-auto">
                 <a
                   href={googleCalendarUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                  className="block w-full px-5 py-3.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors min-h-[44px]"
                 >
                   Google Calendar
                 </a>
@@ -167,22 +170,24 @@ export default function RsvpForm() {
                   href={outlookCalendarUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                  className="block w-full px-5 py-3.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors min-h-[44px]"
                 >
                   Outlook
                 </a>
                 <button
                   type="button"
                   onClick={downloadIcs}
-                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                  className="block w-full px-5 py-3.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors min-h-[44px]"
                 >
                   Apple / .ics
                 </button>
               </div>
             </div>
           )}
+
+          <p className="mt-10 font-script text-2xl text-gold/70">Cristina &amp; Andrei</p>
         </div>
-      </section>
+      </div>
     );
   }
 
@@ -205,7 +210,7 @@ export default function RsvpForm() {
               required
               value={guestCount}
               onChange={(e) => setGuestCount(e.target.value as GuestCount)}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm"
+              className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
             >
               <option value="" disabled>Selectează...</option>
               <option value="1">1 invitat</option>
@@ -229,7 +234,7 @@ export default function RsvpForm() {
                   value={name1}
                   onChange={(e) => setName1(e.target.value)}
                   placeholder="Prenume Nume"
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
                 />
               </div>
               <div>
@@ -271,7 +276,7 @@ export default function RsvpForm() {
                     value={allergies1}
                     onChange={(e) => setAllergies1(e.target.value)}
                     placeholder="Descrie alergiile..."
-                    className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm resize-none"
+                    className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base resize-none"
                   />
                 )}
               </div>
@@ -291,7 +296,7 @@ export default function RsvpForm() {
                   value={guest.name}
                   onChange={(e) => updateExtra(i, "name", e.target.value)}
                   placeholder="Prenume Nume"
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm"
+                  className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
                 />
               </div>
               <div>
@@ -333,7 +338,7 @@ export default function RsvpForm() {
                     value={guest.allergies}
                     onChange={(e) => updateExtra(i, "allergies", e.target.value)}
                     placeholder="Descrie alergiile..."
-                    className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm resize-none"
+                    className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base resize-none"
                   />
                 )}
               </div>
@@ -392,7 +397,7 @@ export default function RsvpForm() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Un gând pentru noi..."
-                className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm resize-none"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base resize-none"
               />
             </div>
           )}

@@ -25,15 +25,13 @@ function getTimeLeft(): TimeLeft {
 
 function TimeBlock({ value, label }: { value: number; label: string }) {
   return (
-    <div className="flex flex-col items-center mx-2 md:mx-4">
-      <div className="flex flex-col items-center">
-        <span className="text-3xl md:text-5xl font-heading text-burgundy font-light">
-          {String(value).padStart(2, "0")}
-        </span>
-        <span className="text-xs text-burgundy/40 font-body uppercase tracking-widest mt-0.5">
-          {label}
-        </span>
-      </div>
+    <div className="flex flex-col items-center">
+      <span className="text-2xl sm:text-3xl md:text-5xl font-heading text-burgundy font-light tabular-nums">
+        {String(value).padStart(2, "0")}
+      </span>
+      <span className="text-[10px] sm:text-xs text-burgundy/40 font-body uppercase tracking-widest mt-0.5">
+        {label}
+      </span>
     </div>
   );
 }
@@ -54,7 +52,7 @@ export default function Countdown() {
       <p className="font-body italic text-burgundy/40 text-xs mb-4 tracking-wide">
         Încă puțin până la ziua cea mare:
       </p>
-      <div className="flex justify-center gap-8 md:gap-12">
+      <div className="flex justify-center gap-5 sm:gap-8 md:gap-12 px-2">
         <TimeBlock value={t.days} label="Zile" />
         <TimeBlock value={t.hours} label="Ore" />
         <TimeBlock value={t.minutes} label="Minute" />
