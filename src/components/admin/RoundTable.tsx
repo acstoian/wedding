@@ -9,13 +9,17 @@ export type RoundTableProps = {
   capacity: number;
   guests: SeatGuest[];
   onDropGuest: (guestId: number, seatNumber: number) => void;
+  onRemoveGuest?: (guestId: number) => void;
   onDragGuestFromSeat?: (guestId: number) => void;
+  onDragEnd?: () => void;
   /** Hover/active state when a guest is being dragged anywhere on the page. */
   isDragActive?: boolean;
+  /** Id of the guest currently being dragged, if any (used to fade source seat). */
+  draggingGuestId?: number | null;
 };
 
-// Layout constants for the SVG/HTML hybrid. Single source of truth so the
-// JPG export captures exactly what's on screen.
+// Layout constants. Single source of truth so the JPG export captures
+// exactly what's on screen.
 const CANVAS = 460;
 const CENTER = CANVAS / 2;
 const TABLE_RADIUS = 75;
@@ -29,7 +33,17 @@ function shortName(full: string): string {
 }
 
 const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTable(
-  { name, capacity, guests, onDropGuest, onDragGuestFromSeat, isDragActive },
+  {
+    name,
+    capacity,
+    guests,
+    onDropGuest,
+    onRemoveGuest,
+    onDragGuestFromSeat,
+    onDragEnd,
+    isDragActive,
+    draggingGuestId,
+  },
   ref
 ) {
   const [hoverSeat, setHoverSeat] = useState<number | null>(null);
@@ -72,8 +86,9 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
         const y = CENTER + SEAT_RING_RADIUS * Math.sin(angle);
         const guest = guestBySeat.get(seatNum);
         const filled = !!guest;
+        const isSource = filled && draggingGuestId === guest!.id;
+        const isHover = hoverSeat === seatNum && !isSource;
 
-        const isHover = hoverSeat === seatNum;
         return (
           <div
             key={seatNum}
@@ -84,6 +99,10 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
                 e.dataTransfer.effectAllowed = "move";
                 onDragGuestFromSeat?.(guest.id);
               }
+            }}
+            onDragEnd={() => {
+              setHoverSeat(null);
+              onDragEnd?.();
             }}
             onDragOver={(e) => {
               e.preventDefault();
@@ -110,7 +129,9 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
               isHover
                 ? "bg-gold-light text-white border-2 border-burgundy ring-4 ring-burgundy/30 scale-110 shadow-lg z-10"
                 : filled
-                ? "bg-gold text-white border-2 border-gold-light cursor-grab active:cursor-grabbing shadow"
+                ? `bg-gold text-white border-2 border-gold-light cursor-grab active:cursor-grabbing shadow ${
+                    isSource ? "opacity-40" : ""
+                  }`
                 : isDragActive
                 ? "bg-cream border-2 border-dashed border-gold/70 text-burgundy/40"
                 : "bg-cream border-2 border-gold/30 text-burgundy/40"
@@ -120,9 +141,10 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
               height: SEAT_DIAMETER,
               left: x - SEAT_DIAMETER / 2,
               top: y - SEAT_DIAMETER / 2,
-              transition: "background-color 120ms, border-color 120ms, transform 120ms, box-shadow 120ms",
+              transition:
+                "background-color 120ms, border-color 120ms, transform 120ms, box-shadow 120ms, opacity 120ms",
             }}
-            title={guest ? guest.name : `Loc ${seatNum} (gol)`}
+            title={guest ? `${guest.name} — trage pentru a muta` : `Loc ${seatNum} (gol)`}
           >
             {filled ? (
               <>
@@ -132,6 +154,23 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
                 <span className="text-[11px] font-body font-semibold leading-tight px-1 mt-0.5 break-words pointer-events-none">
                   {shortName(guest!.name)}
                 </span>
+                {onRemoveGuest && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemoveGuest(guest!.id);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    draggable={false}
+                    aria-label={`Elimină pe ${guest!.name} de la masă`}
+                    title="Elimină de la masă"
+                    className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white text-burgundy border border-burgundy/40 flex items-center justify-center text-xs font-bold shadow hover:bg-burgundy hover:text-white transition-colors cursor-pointer"
+                    style={{ pointerEvents: "auto" }}
+                  >
+                    ×
+                  </button>
+                )}
               </>
             ) : (
               <span className="font-heading text-2xl leading-none pointer-events-none">

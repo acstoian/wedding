@@ -31,6 +31,7 @@ export default function TablesPage() {
   const [editName, setEditName] = useState("");
   const [editCapacity, setEditCapacity] = useState(8);
   const [isDragActive, setIsDragActive] = useState(false);
+  const [draggingGuestId, setDraggingGuestId] = useState<number | null>(null);
   const tableRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   const fetchData = useCallback(async () => {
@@ -114,15 +115,17 @@ export default function TablesPage() {
     e.dataTransfer.setData("text/plain", String(guestId));
     e.dataTransfer.effectAllowed = "move";
     setIsDragActive(true);
+    setDraggingGuestId(guestId);
   }
 
   function endDrag() {
     setIsDragActive(false);
+    setDraggingGuestId(null);
   }
 
   function onUnassignAreaDrop(e: React.DragEvent) {
     e.preventDefault();
-    setIsDragActive(false);
+    endDrag();
     const idStr = e.dataTransfer.getData("text/plain");
     if (!idStr) return;
     const gid = Number(idStr);
@@ -339,10 +342,17 @@ export default function TablesPage() {
                         seatNumber: g.seatNumber,
                       }))}
                       isDragActive={isDragActive}
-                      onDropGuest={(guestId, seatNum) =>
-                        assignToSeat(guestId, table.id, seatNum)
-                      }
-                      onDragGuestFromSeat={(_id) => setIsDragActive(true)}
+                      draggingGuestId={draggingGuestId}
+                      onDropGuest={(guestId, seatNum) => {
+                        endDrag();
+                        assignToSeat(guestId, table.id, seatNum);
+                      }}
+                      onRemoveGuest={unassignGuest}
+                      onDragGuestFromSeat={(id) => {
+                        setIsDragActive(true);
+                        setDraggingGuestId(id);
+                      }}
+                      onDragEnd={endDrag}
                     />
                   </div>
 
