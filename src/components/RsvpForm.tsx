@@ -8,13 +8,13 @@ type MenuType = "Normal" | "Vegetarian";
 const LABELS = ["", "Însoțitor 1", "Însoțitor 2", "Însoțitor 3"];
 
 // Wedding event details. 26 Sep 2026 is in EEST (UTC+3) — DST ends on the last Sunday of Oct.
-// 16:00 local = 13:00 UTC, 23:00 local = 20:00 UTC.
+// Start: 26 Sep 16:00 local = 13:00 UTC. End: 27 Sep 03:00 local = 27 Sep 00:00 UTC.
 const EVENT = {
   title: "Nunta Cristina & Andrei",
   startUtc: "20260926T130000Z",
-  endUtc: "20260926T200000Z",
+  endUtc: "20260927T000000Z",
   startLocal: "2026-09-26T16:00:00",
-  endLocal: "2026-09-26T23:00:00",
+  endLocal: "2026-09-27T03:00:00",
   location: "Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni",
   description:
     "Cununia religioasă · 16:00 · Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni\n" +
