@@ -19,8 +19,8 @@ export default function WhenSection() {
             <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-2">
               Părinții Mirelui
             </p>
-            <p className="font-heading text-base md:text-lg">Nicolae Stoian</p>
-            <p className="font-heading text-base md:text-lg">Iuliana Stoian</p>
+            <p className="font-heading text-base md:text-lg text-black">Nicolae Stoian</p>
+            <p className="font-heading text-base md:text-lg text-black">Iuliana Stoian</p>
           </div>
         </div>
 

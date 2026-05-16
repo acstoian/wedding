@@ -46,7 +46,7 @@ Warm ivory/white background (color: #FEFBF3). Clean, elegant, minimal — like a
 9. Thin gold divider line
 
 10. Two-column venue section:
-    Left column: CUNUNIA RELIGIOASĂ (tiny gold uppercase label) / Parohia Romano Católică „Sf. Anton" (burgundy serif, medium size) / Str. Magnoliei nr. 113, București (small muted text) / 26 Septembrie 2026 · ora 16:00 (small faded text)
+    Left column: CUNUNIA RELIGIOASĂ (tiny gold uppercase label) / Biserica-unicat a Ordinului Carmelitanilor Desculți (burgundy serif, medium size) / DJ101B 54, 077166 Ciofliceni (small muted text) / 26 Septembrie 2026 · ora 16:00 (small faded text)
     Right column: RECEPȚIA (tiny gold uppercase label) / Zooma Paradisul Verde (burgundy serif, medium size) / Aleea Paradisul Verde 6, 077066 Ostratu (small muted text) / 26 Septembrie 2026 · ora 19:00 (small faded text)
 
 11. QR Code section — leave a clean empty white square (approximately 200x200px) with a thin light gray border, perfectly centered horizontally, with the label "Confirmă prezența" in small gold uppercase above it, and "wedding-liart-three.vercel.app" in tiny faded burgundy text below it. The QR code will be added programmatically — leave the square area completely empty white inside.

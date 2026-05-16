@@ -13,10 +13,10 @@ interface EventCard {
 const EVENTS: EventCard[] = [
   {
     type: "Cununia religioasă",
-    venue: 'Parohia Romano Catolică „Sf. Anton"',
-    address: "Str. Magnoliei nr. 113, București",
+    venue: "Biserica-unicat a Ordinului Carmelitanilor Desculți",
+    address: "DJ101B 54, 077166 Ciofliceni",
     time: "ora 16:00",
-    mapQuery: "Parohia Romano Catolica Sf Anton Str Magnoliei 113 Bucuresti",
+    mapQuery: "Manastirea Carmelitanilor Desculti Ciofliceni",
   },
   {
     type: "Recepția",

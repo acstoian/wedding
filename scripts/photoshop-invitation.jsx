@@ -273,7 +273,7 @@ addText(
 // ---- 19. Church name ----
 addText(
     "church-name",
-    "Parohia Romano Catolic\u0103 \u201eSf. Anton\u201d",
+    "Biserica-unicat a Ordinului Carmelitanilor Descul\u0163i",
     "PlayfairDisplay-Italic",
     13, BURGUNDY,
     sx(310), sy(1300),
@@ -283,7 +283,7 @@ addText(
 // ---- 20. Church address ----
 addText(
     "church-address",
-    "Str. Magnoliei nr. 113, Bucure\u0219ti",
+    "DJ101B 54, 077166 Ciofliceni",
     "PlayfairDisplay-Regular",
     8, BURGUNDY_50,
     sx(310), sy(1365),
