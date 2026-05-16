@@ -7,6 +7,70 @@ type MenuType = "Normal" | "Vegetarian";
 
 const LABELS = ["", "Însoțitor 1", "Însoțitor 2", "Însoțitor 3"];
 
+// Wedding event details. 26 Sep 2026 is in EEST (UTC+3) — DST ends on the last Sunday of Oct.
+// 16:00 local = 13:00 UTC, 23:00 local = 20:00 UTC.
+const EVENT = {
+  title: "Nunta Cristina & Andrei",
+  startUtc: "20260926T130000Z",
+  endUtc: "20260926T200000Z",
+  startLocal: "2026-09-26T16:00:00",
+  endLocal: "2026-09-26T23:00:00",
+  location: "Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni",
+  description:
+    "Cununia religioasă · 16:00 · Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni\n" +
+    "Recepția · 19:00 · Zooma Paradisul Verde, Aleea Paradisul Verde 6, 077066 Ostratu",
+};
+
+function googleCalendarUrl() {
+  const p = new URLSearchParams({
+    action: "TEMPLATE",
+    text: EVENT.title,
+    dates: `${EVENT.startUtc}/${EVENT.endUtc}`,
+    details: EVENT.description,
+    location: EVENT.location,
+  });
+  return `https://www.google.com/calendar/render?${p.toString()}`;
+}
+
+function outlookCalendarUrl() {
+  const p = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: EVENT.title,
+    startdt: EVENT.startLocal,
+    enddt: EVENT.endLocal,
+    body: EVENT.description,
+    location: EVENT.location,
+  });
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${p.toString()}`;
+}
+
+function downloadIcs() {
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Cristina Andrei//Wedding//RO",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    "UID:cristina-andrei-2026-09-26@wedding",
+    `DTSTAMP:${EVENT.startUtc}`,
+    `DTSTART:${EVENT.startUtc}`,
+    `DTEND:${EVENT.endUtc}`,
+    `SUMMARY:${EVENT.title}`,
+    `LOCATION:${EVENT.location}`,
+    `DESCRIPTION:${EVENT.description.replace(/\n/g, "\\n")}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "nunta-cristina-andrei.ics";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function RsvpForm() {
   const [guestCount, setGuestCount] = useState<GuestCount>("");
   const [name1, setName1] = useState("");
@@ -84,6 +148,39 @@ export default function RsvpForm() {
           <p className="font-body text-burgundy/60 text-sm">
             Răspunsul tău a fost înregistrat. Abia așteptăm să ne vedem!
           </p>
+
+          {attending && (
+            <div className="mt-8 pt-6 border-t border-gold/20">
+              <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-4">
+                Adaugă în calendar
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <a
+                  href={googleCalendarUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                >
+                  Google Calendar
+                </a>
+                <a
+                  href={outlookCalendarUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                >
+                  Outlook
+                </a>
+                <button
+                  type="button"
+                  onClick={downloadIcs}
+                  className="px-5 py-2.5 rounded-full border border-gold/40 text-burgundy text-xs uppercase tracking-widest font-body hover:bg-gold hover:text-white transition-colors"
+                >
+                  Apple / .ics
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     );
