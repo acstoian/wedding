@@ -111,7 +111,7 @@ export default function TablesPage() {
   }
 
   function startDrag(e: React.DragEvent, guestId: number) {
-    e.dataTransfer.setData("text/guest-id", String(guestId));
+    e.dataTransfer.setData("text/plain", String(guestId));
     e.dataTransfer.effectAllowed = "move";
     setIsDragActive(true);
   }
@@ -122,7 +122,8 @@ export default function TablesPage() {
 
   function onUnassignAreaDrop(e: React.DragEvent) {
     e.preventDefault();
-    const idStr = e.dataTransfer.getData("text/guest-id");
+    setIsDragActive(false);
+    const idStr = e.dataTransfer.getData("text/plain");
     if (!idStr) return;
     const gid = Number(idStr);
     if (Number.isFinite(gid)) unassignGuest(gid);

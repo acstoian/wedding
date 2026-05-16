@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 
 export type SeatGuest = { id: number; name: string; seatNumber: number | null };
 
@@ -32,6 +32,7 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
   { name, capacity, guests, onDropGuest, onDragGuestFromSeat, isDragActive },
   ref
 ) {
+  const [hoverSeat, setHoverSeat] = useState<number | null>(null);
   const cap = Math.min(Math.max(1, capacity), 10);
   const seats = Array.from({ length: cap }, (_, i) => i + 1);
   const guestBySeat = new Map<number, SeatGuest>();
@@ -72,13 +73,14 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
         const guest = guestBySeat.get(seatNum);
         const filled = !!guest;
 
+        const isHover = hoverSeat === seatNum;
         return (
           <div
             key={seatNum}
             draggable={filled}
             onDragStart={(e) => {
               if (filled && guest) {
-                e.dataTransfer.setData("text/guest-id", String(guest.id));
+                e.dataTransfer.setData("text/plain", String(guest.id));
                 e.dataTransfer.effectAllowed = "move";
                 onDragGuestFromSeat?.(guest.id);
               }
@@ -87,15 +89,27 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
             }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              setHoverSeat(seatNum);
+            }}
+            onDragLeave={(e) => {
+              // Only clear when leaving the seat itself, not its children.
+              if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+              setHoverSeat((cur) => (cur === seatNum ? null : cur));
+            }}
             onDrop={(e) => {
               e.preventDefault();
-              const idStr = e.dataTransfer.getData("text/guest-id");
+              setHoverSeat(null);
+              const idStr = e.dataTransfer.getData("text/plain");
               if (!idStr) return;
               const gid = Number(idStr);
               if (Number.isFinite(gid)) onDropGuest(gid, seatNum);
             }}
-            className={`absolute rounded-full flex flex-col items-center justify-center text-center transition-all select-none ${
-              filled
+            className={`absolute rounded-full flex flex-col items-center justify-center text-center select-none ${
+              isHover
+                ? "bg-gold-light text-white border-2 border-burgundy ring-4 ring-burgundy/30 scale-110 shadow-lg z-10"
+                : filled
                 ? "bg-gold text-white border-2 border-gold-light cursor-grab active:cursor-grabbing shadow"
                 : isDragActive
                 ? "bg-cream border-2 border-dashed border-gold/70 text-burgundy/40"
@@ -106,20 +120,23 @@ const RoundTable = forwardRef<HTMLDivElement, RoundTableProps>(function RoundTab
               height: SEAT_DIAMETER,
               left: x - SEAT_DIAMETER / 2,
               top: y - SEAT_DIAMETER / 2,
+              transition: "background-color 120ms, border-color 120ms, transform 120ms, box-shadow 120ms",
             }}
             title={guest ? guest.name : `Loc ${seatNum} (gol)`}
           >
             {filled ? (
               <>
-                <span className="text-[9px] uppercase tracking-wider opacity-80 leading-none">
+                <span className="text-[9px] uppercase tracking-wider opacity-80 leading-none pointer-events-none">
                   Loc {seatNum}
                 </span>
-                <span className="text-[11px] font-body font-semibold leading-tight px-1 mt-0.5 break-words">
+                <span className="text-[11px] font-body font-semibold leading-tight px-1 mt-0.5 break-words pointer-events-none">
                   {shortName(guest!.name)}
                 </span>
               </>
             ) : (
-              <span className="font-heading text-2xl leading-none">{seatNum}</span>
+              <span className="font-heading text-2xl leading-none pointer-events-none">
+                {seatNum}
+              </span>
             )}
           </div>
         );
