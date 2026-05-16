@@ -5,6 +5,10 @@ node_modules/
 dist/
 build/
 .next/
+tsconfig.tsbuildinfo
+
+# Claude Code metadata
+.claude/
 
 # Database
 prisma/dev.db

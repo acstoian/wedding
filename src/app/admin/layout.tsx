@@ -47,6 +47,7 @@ const navLinks = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/guests", label: "Invitați" },
   { href: "/admin/tables", label: "Mese" },
+  { href: "/admin/images", label: "Imagini" },
 ];
 
 export default function AdminLayout({
@@ -73,6 +74,7 @@ export default function AdminLayout({
 
     if (res.ok) {
       sessionStorage.setItem("admin_auth", "true");
+      sessionStorage.setItem("admin_password", password);
       setAuthenticated(true);
     }
   }
@@ -115,6 +117,7 @@ export default function AdminLayout({
           <button
             onClick={() => {
               sessionStorage.removeItem("admin_auth");
+              sessionStorage.removeItem("admin_password");
               setAuthenticated(false);
             }}
             className="text-cream/50 hover:text-cream text-sm"
