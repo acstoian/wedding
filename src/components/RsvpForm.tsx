@@ -11,13 +11,14 @@ export default function RsvpForm() {
   const [guestCount, setGuestCount] = useState<GuestCount>("");
   const [name1, setName1] = useState("");
   const [menu1, setMenu1] = useState<MenuType>("Normal");
-  const [extras, setExtras] = useState<Array<{ name: string; menu: MenuType }>>([
-    { name: "", menu: "Normal" },
-    { name: "", menu: "Normal" },
-    { name: "", menu: "Normal" },
+  const [hasAllergies1, setHasAllergies1] = useState(false);
+  const [allergies1, setAllergies1] = useState("");
+  const blankExtra = { name: "", menu: "Normal" as MenuType, hasAllergies: false, allergies: "" };
+  const [extras, setExtras] = useState<Array<typeof blankExtra>>([
+    { ...blankExtra },
+    { ...blankExtra },
+    { ...blankExtra },
   ]);
-  const [hasAllergies, setHasAllergies] = useState(false);
-  const [allergies, setAllergies] = useState("");
   const [hasKids, setHasKids] = useState(false);
   const [kidsCount, setKidsCount] = useState(1);
   const [message, setMessage] = useState("");
@@ -27,8 +28,25 @@ export default function RsvpForm() {
   const attending = count > 0;
   const extraCount = Math.max(0, count - 1);
 
-  function updateExtra(i: number, field: "name" | "menu", value: string) {
-    setExtras((prev) => prev.map((g, idx) => idx === i ? { ...g, [field]: value } : g));
+  function updateExtra<K extends keyof typeof blankExtra>(
+    i: number,
+    field: K,
+    value: (typeof blankExtra)[K]
+  ) {
+    setExtras((prev) => prev.map((g, idx) => (idx === i ? { ...g, [field]: value } : g)));
+  }
+
+  function buildAllergiesString(): string | null {
+    const parts: string[] = [];
+    if (hasAllergies1 && allergies1.trim()) {
+      parts.push(`${name1.trim() || "Invitat 1"}: ${allergies1.trim()}`);
+    }
+    extras.slice(0, extraCount).forEach((g, i) => {
+      if (g.hasAllergies && g.allergies.trim()) {
+        parts.push(`${g.name.trim() || LABELS[i] || `Însoțitor ${i + 1}`}: ${g.allergies.trim()}`);
+      }
+    });
+    return parts.length ? parts.join(" | ") : null;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,7 +64,7 @@ export default function RsvpForm() {
           plusOneName: extraCount > 0 ? activeExtras.map((g) => g.name).join(", ") : null,
           menuPreference: attending ? menu1 : null,
           plusOneMenu: extraCount > 0 ? activeExtras.map((g) => g.menu).join(", ") : null,
-          allergies: hasAllergies && allergies ? allergies : null,
+          allergies: buildAllergiesString(),
           kidsCount: hasKids ? kidsCount : null,
           message: message || null,
         }),
@@ -138,6 +156,28 @@ export default function RsvpForm() {
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="flex items-center gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={hasAllergies1}
+                    onChange={(e) => setHasAllergies1(e.target.checked)}
+                    className="w-4 h-4 accent-gold rounded"
+                  />
+                  <span className="text-xs uppercase tracking-[0.2em] text-burgundy/60 font-body">
+                    Alergii alimentare
+                  </span>
+                </label>
+                {hasAllergies1 && (
+                  <textarea
+                    rows={2}
+                    value={allergies1}
+                    onChange={(e) => setAllergies1(e.target.value)}
+                    placeholder="Descrie alergiile..."
+                    className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm resize-none"
+                  />
+                )}
+              </div>
             </>
           )}
 
@@ -178,35 +218,34 @@ export default function RsvpForm() {
                   ))}
                 </div>
               </div>
-            </div>
-          ))}
-
-          {/* Allergies + Kids */}
-          {attending && (
-            <div className="space-y-4 pt-1">
               <div>
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
-                    checked={hasAllergies}
-                    onChange={(e) => setHasAllergies(e.target.checked)}
+                    checked={guest.hasAllergies}
+                    onChange={(e) => updateExtra(i, "hasAllergies", e.target.checked)}
                     className="w-4 h-4 accent-gold rounded"
                   />
                   <span className="text-xs uppercase tracking-[0.2em] text-burgundy/60 font-body">
                     Alergii alimentare
                   </span>
                 </label>
-                {hasAllergies && (
+                {guest.hasAllergies && (
                   <textarea
                     rows={2}
-                    value={allergies}
-                    onChange={(e) => setAllergies(e.target.value)}
-                    placeholder="Descrie alergiile tale..."
+                    value={guest.allergies}
+                    onChange={(e) => updateExtra(i, "allergies", e.target.value)}
+                    placeholder="Descrie alergiile..."
                     className="mt-2 w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-sm resize-none"
                   />
                 )}
               </div>
+            </div>
+          ))}
 
+          {/* Kids */}
+          {attending && (
+            <div className="space-y-4 pt-1">
               <div>
                 <label className="flex items-center gap-3 cursor-pointer select-none">
                   <input
