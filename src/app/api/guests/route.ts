@@ -37,8 +37,10 @@ export async function PUT(req: NextRequest) {
     });
 
     return NextResponse.json(guest);
-  } catch {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error("PUT /api/guests failed:", err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
