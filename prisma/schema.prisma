@@ -21,6 +21,7 @@ model Guest {
   dietaryRestrictions String?  // legacy field
   message             String?
   tableId             Int?
+  seatNumber          Int?     // 1..capacity within their assigned table; null = no specific seat
   table               Table?   @relation(fields: [tableId], references: [id])
   createdAt           DateTime @default(now())
 }
