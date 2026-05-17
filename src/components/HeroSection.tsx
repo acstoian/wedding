@@ -23,15 +23,24 @@ export default function HeroSection() {
       </h1>
 
       {/* Date */}
-      <div className="flex items-center justify-center gap-2 sm:gap-4 mt-6 mb-1 px-2">
-        <div className="flex-1 h-px bg-gold/40" />
-        <span className="text-[10px] sm:text-xs font-body uppercase tracking-[0.2em] sm:tracking-[0.3em] text-burgundy/50 whitespace-nowrap">Sâmbătă</span>
-        <div className="flex-1 h-px bg-gold/40" />
-        <span className="font-heading text-4xl sm:text-5xl md:text-6xl text-forest-green font-light">26</span>
-        <div className="flex-1 h-px bg-gold/40" />
-        <span className="text-[10px] sm:text-xs font-body uppercase tracking-[0.2em] sm:tracking-[0.3em] text-burgundy/50 whitespace-nowrap">Septembrie</span>
-        <div className="flex-1 h-px bg-gold/40" />
+      <div className="max-w-xl mx-auto flex items-center justify-center gap-3 sm:gap-5 mt-6 mb-1 px-2">
+        <div className="flex-1 h-px bg-gold/50" />
+        <span className="text-xs sm:text-sm font-body uppercase tracking-[0.25em] sm:tracking-[0.3em] text-burgundy/70 whitespace-nowrap">
+          Sâmbătă
+        </span>
+        <div className="flex-1 h-px bg-gold/50" />
+        <span className="font-heading text-4xl sm:text-5xl text-forest-green font-light leading-none">
+          26
+        </span>
+        <div className="flex-1 h-px bg-gold/50" />
+        <span className="text-xs sm:text-sm font-body uppercase tracking-[0.25em] sm:tracking-[0.3em] text-burgundy/70 whitespace-nowrap">
+          Septembrie
+        </span>
+        <div className="flex-1 h-px bg-gold/50" />
       </div>
+      <p className="text-xs sm:text-sm font-body uppercase tracking-[0.3em] text-gold/80 mt-2">
+        2026
+      </p>
       {/* Countdown */}
       <Countdown />
     </section>
