@@ -100,19 +100,6 @@ export default function RsvpForm() {
     setExtras((prev) => prev.map((g, idx) => (idx === i ? { ...g, [field]: value } : g)));
   }
 
-  function buildAllergiesString(): string | null {
-    const parts: string[] = [];
-    if (hasAllergies1 && allergies1.trim()) {
-      parts.push(`${name1.trim() || "Invitat 1"}: ${allergies1.trim()}`);
-    }
-    extras.slice(0, extraCount).forEach((g, i) => {
-      if (g.hasAllergies && g.allergies.trim()) {
-        parts.push(`${g.name.trim() || LABELS[i] || `Însoțitor ${i + 1}`}: ${g.allergies.trim()}`);
-      }
-    });
-    return parts.length ? parts.join(" | ") : null;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("loading");
@@ -122,13 +109,17 @@ export default function RsvpForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name1 || "Anonim",
           attending: attending ? "yes" : "no",
-          plusOne: extraCount > 0,
-          plusOneName: extraCount > 0 ? activeExtras.map((g) => g.name).join(", ") : null,
-          menuPreference: attending ? menu1 : null,
-          plusOneMenu: extraCount > 0 ? activeExtras.map((g) => g.menu).join(", ") : null,
-          allergies: buildAllergiesString(),
+          primary: {
+            name: name1 || "Anonim",
+            menuPreference: attending ? menu1 : null,
+            allergies: hasAllergies1 && allergies1.trim() ? allergies1.trim() : null,
+          },
+          extras: activeExtras.map((g) => ({
+            name: g.name,
+            menuPreference: g.menu,
+            allergies: g.hasAllergies && g.allergies.trim() ? g.allergies.trim() : null,
+          })),
           kidsCount: hasKids ? kidsCount : null,
           message: message || null,
         }),

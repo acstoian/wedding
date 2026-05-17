@@ -10,6 +10,33 @@ interface Guest {
   attending: string;
   tableId: number | null;
   seatNumber: number | null;
+  parentGuestId: number | null;
+}
+
+type UnassignedGroup = { primary: Guest; extras: Guest[] };
+
+function groupUnassigned(unassigned: Guest[]): UnassignedGroup[] {
+  // The unassigned list contains both primaries (parentGuestId == null) and
+  // any plus-ones who haven't been seated yet. Keep each "party" together so
+  // it's clear who came with whom while choosing seats.
+  const groups = new Map<number, UnassignedGroup>();
+  const orphans: Guest[] = [];
+
+  unassigned
+    .filter((g) => g.parentGuestId == null)
+    .forEach((primary) => groups.set(primary.id, { primary, extras: [] }));
+
+  unassigned
+    .filter((g) => g.parentGuestId != null)
+    .forEach((extra) => {
+      const group = groups.get(extra.parentGuestId!);
+      if (group) group.extras.push(extra);
+      else orphans.push(extra);
+    });
+
+  // Orphans (plus-ones whose primary is already seated) get their own pseudo-group.
+  orphans.forEach((o) => groups.set(o.id, { primary: o, extras: [] }));
+  return Array.from(groups.values());
 }
 
 interface Table {
@@ -235,18 +262,44 @@ export default function TablesPage() {
               {unassigned.length === 0 ? (
                 <p className="text-gray-400 text-sm">Toți invitații confirmați au fost asignați</p>
               ) : (
-                <div className="space-y-2 max-h-[32rem] overflow-y-auto">
-                  {unassigned.map((guest) => (
-                    <div
-                      key={guest.id}
-                      draggable
-                      onDragStart={(e) => startDrag(e, guest.id)}
-                      onDragEnd={endDrag}
-                      className="bg-gray-50 hover:bg-gold/10 rounded-lg px-3 py-2 cursor-grab active:cursor-grabbing text-sm text-gray-700 border border-transparent hover:border-gold/30 transition-colors"
-                    >
-                      {guest.name}
-                    </div>
-                  ))}
+                <div className="space-y-3 max-h-[32rem] overflow-y-auto">
+                  {groupUnassigned(unassigned).map((group) => {
+                    const members = [group.primary, ...group.extras];
+                    const hasGroup = group.extras.length > 0;
+                    return (
+                      <div
+                        key={group.primary.id}
+                        className={
+                          hasGroup
+                            ? "rounded-lg border border-gold/30 bg-gold/5 p-2 space-y-1"
+                            : ""
+                        }
+                      >
+                        {hasGroup && (
+                          <p className="text-[10px] uppercase tracking-widest text-burgundy/50 px-1 pb-1">
+                            Grup ({members.length})
+                          </p>
+                        )}
+                        {members.map((guest, idx) => {
+                          const isExtra = idx > 0;
+                          return (
+                            <div
+                              key={guest.id}
+                              draggable
+                              onDragStart={(e) => startDrag(e, guest.id)}
+                              onDragEnd={endDrag}
+                              className={`flex items-center bg-white hover:bg-gold/10 rounded px-3 py-2 cursor-grab active:cursor-grabbing text-sm text-gray-700 border border-transparent hover:border-gold/30 transition-colors ${
+                                isExtra ? "ml-2" : ""
+                              }`}
+                            >
+                              {isExtra && <span className="text-gold/70 mr-2" aria-hidden>↳</span>}
+                              <span>{guest.name}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

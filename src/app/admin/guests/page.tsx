@@ -22,7 +22,37 @@ interface Guest {
   message: string | null;
   tableId: number | null;
   table: Table | null;
+  parentGuestId: number | null;
   createdAt: string;
+}
+
+type GuestGroup = { primary: Guest; extras: Guest[] };
+
+function groupGuests(guests: Guest[]): GuestGroup[] {
+  const byId = new Map<number, Guest>();
+  guests.forEach((g) => byId.set(g.id, g));
+
+  const groups = new Map<number, GuestGroup>();
+  // Seed groups from primaries first so they keep the primary's createdAt order.
+  guests
+    .filter((g) => g.parentGuestId == null)
+    .forEach((primary) => groups.set(primary.id, { primary, extras: [] }));
+
+  // Attach extras to their primary's group; if the primary somehow isn't in the
+  // current filtered set, fall back to treating the extra as a standalone group.
+  guests
+    .filter((g) => g.parentGuestId != null)
+    .forEach((extra) => {
+      const parentId = extra.parentGuestId!;
+      const group = groups.get(parentId);
+      if (group) {
+        group.extras.push(extra);
+      } else {
+        groups.set(extra.id, { primary: extra, extras: [] });
+      }
+    });
+
+  return Array.from(groups.values());
 }
 
 export default function GuestsPage() {
@@ -173,95 +203,109 @@ export default function GuestsPage() {
               </tr>
             </thead>
             <tbody>
-              {guests.map((guest) => (
-                <tr key={guest.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  {editingId === guest.id ? (
-                    <>
-                      <td className="px-4 py-3">
-                        <input
-                          value={editData.name || ""}
-                          onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                          className="border rounded px-2 py-1 w-full text-sm"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          value={editData.email || ""}
-                          onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                          className="border rounded px-2 py-1 w-full text-sm"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={editData.attending || "pending"}
-                          onChange={(e) => setEditData({ ...editData, attending: e.target.value })}
-                          className="border rounded px-2 py-1 text-sm"
-                        >
-                          <option value="yes">Confirmat</option>
-                          <option value="no">Refuzat</option>
-                          <option value="pending">În așteptare</option>
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={editData.plusOne || false}
-                          onChange={(e) => setEditData({ ...editData, plusOne: e.target.checked })}
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-gray-400">{guest.table?.name || "—"}</td>
-                      <td className="px-4 py-3">
-                        <button onClick={handleSave} className="text-green-600 hover:text-green-800 mr-2 text-sm">
-                          Salvează
-                        </button>
-                        <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 text-sm">
-                          Anulează
-                        </button>
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td className="px-4 py-3 font-medium text-gray-800">
-                        {guest.name}
-                        {guest.message && (
-                          <div className="text-xs text-gray-400 mt-1 italic">
-                            &ldquo;{guest.message}&rdquo;
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">{statusBadge(guest.attending)}</td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {guest.menuPreference || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {guest.plusOne ? (
-                          <span>
-                            {guest.plusOneName || "Da"}
-                            {guest.plusOneMenu && <span className="block text-gray-400">{guest.plusOneMenu}</span>}
-                          </span>
-                        ) : "Nu"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs max-w-[160px]">
-                        {guest.allergies ? (
-                          <span className="text-orange-600">{guest.allergies}</span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">
-                        {guest.kidsCount != null ? guest.kidsCount : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">{guest.table?.name || "—"}</td>
-                      <td className="px-4 py-3">
-                        <button onClick={() => startEdit(guest)} className="text-blue-500 hover:text-blue-700 mr-3 text-sm">
-                          Editează
-                        </button>
-                        <button onClick={() => handleDelete(guest.id)} className="text-red-400 hover:text-red-600 text-sm">
-                          Șterge
-                        </button>
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
+              {groupGuests(guests).flatMap((group) => {
+                const members = [group.primary, ...group.extras];
+                return members.map((guest, idx) => {
+                  const isExtra = idx > 0;
+                  const isLastInGroup = idx === members.length - 1;
+                  const rowBg = isExtra ? "bg-cream/40" : "";
+                  const borderClass = isLastInGroup
+                    ? "border-b-2 border-gold/40"
+                    : "border-b border-gray-50";
+                  return (
+                    <tr key={guest.id} className={`${borderClass} hover:bg-gray-50 ${rowBg}`}>
+                      {editingId === guest.id ? (
+                        <>
+                          <td className="px-4 py-3">
+                            <input
+                              value={editData.name || ""}
+                              onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                              className="border rounded px-2 py-1 w-full text-sm"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <select
+                              value={editData.attending || "pending"}
+                              onChange={(e) => setEditData({ ...editData, attending: e.target.value })}
+                              className="border rounded px-2 py-1 text-sm"
+                            >
+                              <option value="yes">Confirmat</option>
+                              <option value="no">Refuzat</option>
+                              <option value="pending">În așteptare</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3" colSpan={5}>
+                            <input
+                              value={editData.email || ""}
+                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                              placeholder="email"
+                              className="border rounded px-2 py-1 text-sm w-full"
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <button onClick={handleSave} className="text-green-600 hover:text-green-800 mr-2 text-sm">
+                              Salvează
+                            </button>
+                            <button onClick={() => setEditingId(null)} className="text-gray-400 hover:text-gray-600 text-sm">
+                              Anulează
+                            </button>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="px-4 py-3 font-medium text-gray-800">
+                            <div className={`flex items-center ${isExtra ? "pl-6 text-gray-700" : ""}`}>
+                              {isExtra && (
+                                <span className="text-gold/70 mr-2" aria-hidden>↳</span>
+                              )}
+                              <span>{guest.name}</span>
+                            </div>
+                            {!isExtra && guest.message && (
+                              <div className="text-xs text-gray-400 mt-1 italic">
+                                &ldquo;{guest.message}&rdquo;
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">{statusBadge(guest.attending)}</td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">
+                            {guest.menuPreference || "—"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">
+                            {isExtra ? (
+                              <span className="italic text-gray-400">
+                                cu {group.primary.name}
+                              </span>
+                            ) : group.extras.length > 0 ? (
+                              <span className="text-burgundy/80">
+                                + {group.extras.length} {group.extras.length === 1 ? "alt invitat" : "alți invitați"}
+                              </span>
+                            ) : (
+                              "Nu"
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-xs max-w-[160px]">
+                            {guest.allergies ? (
+                              <span className="text-orange-600">{guest.allergies}</span>
+                            ) : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500 text-xs">
+                            {!isExtra && guest.kidsCount != null ? guest.kidsCount : "—"}
+                          </td>
+                          <td className="px-4 py-3 text-gray-500">{guest.table?.name || "—"}</td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <button onClick={() => startEdit(guest)} className="text-blue-500 hover:text-blue-700 mr-3 text-sm">
+                              Editează
+                            </button>
+                            <button onClick={() => handleDelete(guest.id)} className="text-red-400 hover:text-red-600 text-sm">
+                              Șterge
+                            </button>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                });
+              })}
             </tbody>
           </table>
         </div>
