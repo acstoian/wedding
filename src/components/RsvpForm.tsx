@@ -84,7 +84,9 @@ export default function RsvpForm() {
     { ...blankExtra },
   ]);
   const [hasKids, setHasKids] = useState(false);
-  const [kidsCount, setKidsCount] = useState(1);
+  type Kid = { name: string; needsSeat: boolean };
+  const blankKid: Kid = { name: "", needsSeat: false };
+  const [kids, setKids] = useState<Kid[]>([{ ...blankKid }]);
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -105,6 +107,20 @@ export default function RsvpForm() {
     setStatus("loading");
     try {
       const activeExtras = extras.slice(0, extraCount);
+      // Kids that need their own chair become real Guest rows (seatable).
+      // Kids without a seat just bump the kidsCount on the primary so the
+      // venue knows the total head count for catering / high chairs.
+      const seatedKids = hasKids
+        ? kids
+            .filter((k) => k.needsSeat)
+            .map((k, i) => ({
+              name: k.name.trim() || `Copil ${i + 1} al ${(name1 || "Anonim").trim()}`,
+              menuPreference: "Normal" as MenuType,
+              allergies: null as string | null,
+            }))
+        : [];
+      const lapKidsCount = hasKids ? kids.filter((k) => !k.needsSeat).length : 0;
+
       const res = await fetch("/api/rsvp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,12 +131,15 @@ export default function RsvpForm() {
             menuPreference: attending ? menu1 : null,
             allergies: hasAllergies1 && allergies1.trim() ? allergies1.trim() : null,
           },
-          extras: activeExtras.map((g) => ({
-            name: g.name,
-            menuPreference: g.menu,
-            allergies: g.hasAllergies && g.allergies.trim() ? g.allergies.trim() : null,
-          })),
-          kidsCount: hasKids ? kidsCount : null,
+          extras: [
+            ...activeExtras.map((g) => ({
+              name: g.name,
+              menuPreference: g.menu,
+              allergies: g.hasAllergies && g.allergies.trim() ? g.allergies.trim() : null,
+            })),
+            ...seatedKids,
+          ],
+          kidsCount: lapKidsCount || null,
           message: message || null,
         }),
       });
@@ -351,26 +370,72 @@ export default function RsvpForm() {
                     Vin cu copii
                   </span>
                 </label>
+
                 {hasKids && (
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="text-xs text-burgundy/50 font-body">Număr copii:</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setKidsCount(Math.max(1, kidsCount - 1))}
-                        className="w-8 h-8 rounded-full border border-gold/40 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center font-bold"
-                      >
-                        −
-                      </button>
-                      <span className="w-6 text-center font-heading text-lg text-burgundy">{kidsCount}</span>
-                      <button
-                        type="button"
-                        onClick={() => setKidsCount(kidsCount + 1)}
-                        className="w-8 h-8 rounded-full border border-gold/40 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center font-bold"
-                      >
-                        +
-                      </button>
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-burgundy/50 font-body">Număr copii:</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setKids((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev))
+                          }
+                          className="w-8 h-8 rounded-full border border-gold/40 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center font-bold"
+                        >
+                          −
+                        </button>
+                        <span className="w-6 text-center font-heading text-lg text-burgundy">
+                          {kids.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setKids((prev) => [...prev, { ...blankKid }])}
+                          className="w-8 h-8 rounded-full border border-gold/40 text-gold hover:bg-gold/10 transition-colors flex items-center justify-center font-bold"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
+
+                    {kids.map((kid, i) => (
+                      <div
+                        key={i}
+                        className="space-y-2 rounded-xl border border-gold/20 bg-cream/40 p-3"
+                      >
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-burgundy/50 font-body">
+                          Copil {i + 1}
+                        </p>
+                        <input
+                          type="text"
+                          value={kid.name}
+                          onChange={(e) =>
+                            setKids((prev) =>
+                              prev.map((k, idx) => (idx === i ? { ...k, name: e.target.value } : k))
+                            )
+                          }
+                          placeholder="Prenume Nume (opțional)"
+                          className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
+                        />
+                        <label className="flex items-center gap-3 cursor-pointer select-none pt-1">
+                          <input
+                            type="checkbox"
+                            checked={kid.needsSeat}
+                            onChange={(e) =>
+                              setKids((prev) =>
+                                prev.map((k, idx) =>
+                                  idx === i ? { ...k, needsSeat: e.target.checked } : k
+                                )
+                              )
+                            }
+                            className="w-4 h-4 accent-gold rounded"
+                          />
+                          <span className="text-xs text-burgundy/70 font-body">
+                            Are nevoie de loc propriu la masă
+                          </span>
+                        </label>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
