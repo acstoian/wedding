@@ -47,8 +47,8 @@ async function main() {
       const buf = Buffer.from(bytes, "base64");
       fs.writeFileSync(path.join(OUT, img.filename), buf);
       console.log(`  Saved → public/images/${img.filename} (${(buf.length / 1024).toFixed(0)} KB)`);
-    } catch (err: any) {
-      console.error(`  FAILED: ${err.message}`);
+    } catch (err) {
+      console.error(`  FAILED: ${err instanceof Error ? err.message : String(err)}`);
     }
     await new Promise(r => setTimeout(r, 1500));
   }

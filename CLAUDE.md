@@ -6,63 +6,142 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Romanian wedding website for "Cristina & Andrei" (26 September 2026). Full-stack app with a public guest-facing site and a password-protected admin panel. All UI text is in Romanian.
 
+### This repo contains two unrelated projects
+
+The `wedding` repository holds two independent codebases separated **by branch, not by directory**. They share no code, no database, and no dependencies.
+
+| Branch | Project | Stack |
+|---|---|---|
+| `master` / `origin/master` | This wedding site | Next.js + Prisma + Neon Postgres |
+| `joc` | "Joc" — a live A/B trivia game for the reception | Next.js + Supabase |
+
+Two consequences worth internalizing:
+
+- **Switching branches in place rewrites nearly every file.** Use a git worktree instead of `git checkout` when you need both.
+- **Local `master` is stale** (14 commits behind `origin/master`) and was never fast-forwarded. Diff against `origin/master`, not `master`, or you will see a large fake diff.
+
+Everything below this section describes the **wedding site only**.
+
 ## Commands
 
 ```bash
-npm run dev         # Start dev server
-npm run build       # Production build
-npm run lint        # ESLint via next lint
-npm run db:migrate  # Run Prisma migrations (prisma migrate dev)
-npm run db:seed     # Seed DB with sample data (runs prisma/seed.ts via tsx)
-npm run db:studio   # Open Prisma Studio GUI
+npm run dev              # Start dev server on :3000
+npm run build            # prisma generate && next build
+npm run start            # Serve the production build
+npm run db:migrate       # Run Prisma migrations (prisma migrate dev)
+npm run db:seed          # Seed DB with sample data (prisma/seed.ts via tsx)
+npm run db:studio        # Open Prisma Studio GUI
+npm run generate:images  # Batch-generate site imagery (scripts/generate-images.ts)
+npm run gen:image        # Generate a single image (scripts/gen-image.ts)
 ```
 
-No test framework is configured.
+`build` runs `prisma generate` first so Vercel always builds against a fresh client.
+
+`lint` runs the ESLint 9 flat config in `eslint.config.mjs` (`eslint-config-next` core-web-vitals + typescript). It currently exits 0 with one known warning; see Known Issues.
+
+No test framework is configured. Verify changes visually against `http://localhost:3000`.
 
 ## Tech Stack
 
-- **Next.js 16** with App Router (`src/app/`)
-- **React 19**, **TypeScript 5.9** (strict mode)
-- **Tailwind CSS v4** — uses `@import "tailwindcss"` + `@theme` block (not the v3 `@tailwind` directives)
-- **Prisma 6** with **SQLite** (`prisma/dev.db`)
+- **Next.js 16.2** with App Router (`src/app/`)
+- **React 19.2**, **TypeScript 6.0** (strict mode, target ES2017)
+- **Tailwind CSS v4** — `@import "tailwindcss"` + an `@theme` block, wired through `@tailwindcss/postcss` (not the v3 `@tailwind` directives)
+- **Prisma 6.19** with **PostgreSQL** hosted on Neon
+- **ESLint 9** flat config (`eslint.config.mjs`) with `eslint-config-next` 16
+- `@google/genai` for Imagen 4 image generation; `html2canvas` for seating-chart export
 - Path alias: `@/*` → `./src/*`
+- `next.config.js` is intentionally empty — Vercel auto-detects Next.js with zero config
 
 ## Architecture
 
 ### Public Site
 
-Single-page scrolling layout at `/`. The page component (`src/app/page.tsx`) assembles sections in order: HeroSection → Countdown → Timeline → VenueMap → Gallery → RsvpForm. All sections are in `src/components/`.
+Single scrolling page at `/`. `src/app/page.tsx` renders three absolutely-positioned corner botanicals, then stacks the sections:
 
-Server components: HeroSection, Timeline, VenueMap, Gallery, FloralDivider.
-Client components (`"use client"`): Countdown, RsvpForm.
+```
+HeroSection → WhenSection → WhereSection → RsvpForm → footer
+```
+
+`Countdown` renders inside `HeroSection`, not at page level. The top-right corner reuses `corner-left.jpg` mirrored with `style={{ transform: "scaleX(-1)" }}`; corner images are `pointer-events-none select-none` with responsive width classes.
+
+Client components (`"use client"`): `Countdown`, `RsvpForm`, `WhereSection`, `components/admin/RoundTable`, and every file under `src/app/admin/`. Everything else is a server component.
+
+`src/components/` contains only what the page actually renders. Six components orphaned by an earlier redesign (`CoupleCards`, `FloralDivider`, `Gallery`, `StickyNav`, `Timeline`, `VenueMap`) were deleted; recover them from git history if a gallery or timeline is ever wanted back.
 
 ### Admin Panel (`/admin`)
 
-Client-side password auth via `sessionStorage` — no JWT/cookies. The password is checked against `ADMIN_PASSWORD` env var through `/api/admin/auth`.
+Client-side password auth via `sessionStorage` — no JWT, no cookies, no middleware. `src/app/admin/layout.tsx` posts the password to `/api/admin/auth`, then stores `admin_auth` and `admin_password` in `sessionStorage`. This is obscurity, not access control; every API route is unauthenticated.
 
-Three pages:
+Four pages:
 - `/admin` — Dashboard with RSVP statistics
-- `/admin/guests` — Guest CRUD table with filtering and CSV export
-- `/admin/tables` — Table/seating management with guest assignment
+- `/admin/guests` — Guest table with filtering, editing, CSV export, and menu/allergy/kids columns
+- `/admin/tables` — Round-table seating with drag-and-drop assignment and JPG export via `html2canvas`
+- `/admin/images` — On-demand Imagen generation
 
 ### API Routes (`src/app/api/`)
 
+- `/api/rsvp` — POST (public RSVP submission), GET (all guests with tables)
 - `/api/guests` — GET (list, filter by `?status=`), PUT (update), DELETE (`?id=`)
-- `/api/rsvp` — POST (public RSVP submission)
 - `/api/tables` — GET (list with guests), POST (create), PUT (update), DELETE (`?id=`)
 - `/api/admin/auth` — POST (password validation)
+- `/api/admin/generate-image` — POST (Imagen 4 proxy, model `imagen-4.0-generate-001`)
+
+`POST /api/rsvp` accepts two payload shapes. The current one is `{ primary, extras[] }`; a legacy flat shape (`name` + comma-joined `plusOneName`/`plusOneMenu`) is normalized on the way in so older clients don't 500. It writes the primary guest first, then each extra as its own row pointing at the primary via `parentGuestId`.
 
 ### Database
 
-Two models in `prisma/schema.prisma`: **Guest** (name, email, attending status, plus-one, dietary, message, optional table FK) and **Table** (name, capacity, guests relation). Prisma client singleton at `src/lib/db.ts`.
+Prisma client singleton at `src/lib/db.ts`. Two models in `prisma/schema.prisma`:
+
+**Guest**
+- Identity — `id`, `name`, `email?`, `createdAt`
+- Attendance — `attending`: `"yes"` | `"no"` | `"pending"`
+- Preferences — `menuPreference?` (`"Normal"` | `"Vegetarian"`), `allergies?`, `kidsCount?`, `message?`. `kidsCount` and `message` are household-level and live on the primary guest.
+- Seating — `tableId?`, `seatNumber?` (1..capacity; null means assigned to a table but no specific seat)
+- Grouping — `parentGuestId?` / `parent` / `plusOnes[]`, a self-relation named `GuestGroup`. Primaries have a null parent; plus-ones point at their primary. `onDelete: SetNull` so deleting a primary orphans its plus-ones into primaries rather than cascading data loss.
+- Legacy — `plusOne`, `plusOneName?`, `plusOneMenu?`, `dietaryRestrictions?` hold pre-grouping concatenated values. Marked legacy in the schema; read them only for old rows, never write them.
+
+**Table** — `id`, `name`, `capacity` (default 8), `guests` relation.
+
+Three migrations: the Postgres init, then `add_guest_seat_number`, then `add_guest_parent_group`. `prisma/backfill-groups.ts` is a one-off script that populates the grouping relation on rows created before it existed.
+
+## Environment
+
+Secrets live in `.env` / `.env.local` (both gitignored) and in the Vercel project settings. Prisma CLI commands read `.env`, not `.env.local`.
+
+| Variable | Used by |
+|---|---|
+| `DATABASE_URL` | Prisma — Neon Postgres connection string |
+| `ADMIN_PASSWORD` | `/api/admin/auth` |
+| `GOOGLE_AI_API_KEY` | `/api/admin/generate-image` and the image scripts |
+
+`ADMIN_PASSWORD` is **required**. `/api/admin/auth` fails closed — if the variable is unset it logs an error and returns 503 rather than accepting anything. (It previously fell back to a password hardcoded in the source; don't reintroduce that.)
+
+## Deployment
+
+Vercel, auto-deploying on push to `master`. Standard flow:
+
+```bash
+git add -A && git commit -m "..." && git push
+```
 
 ## Style Conventions
 
-- Custom color tokens defined in `src/app/globals.css` `@theme` block: `burgundy`, `burnt-orange`, `gold`, `cream`, `sage` (and variants). Use as Tailwind classes: `bg-burgundy`, `text-gold`, etc.
-- Custom fonts: `font-heading` (Playfair Display), `font-body` (Lato) — loaded via Google Fonts `<link>` in root layout.
-- No UI component library — all components are hand-built with Tailwind.
-- No state management or form libraries — plain `useState`/`useEffect` and controlled inputs.
-- HTML lang is `"ro"`, dates use `toLocaleDateString("ro-RO")`.
+- Color tokens live in the `@theme` block of `src/app/globals.css` and are used as ordinary Tailwind classes (`bg-burgundy`, `text-gold`, `text-forest-green`):
+  `burgundy`, `burgundy-light`, `burnt-orange`, `gold`, `gold-light`, `cream`, `cream-dark`, `sage`, `sage-dark`, `forest-green`, `forest-green-light`
+- Fonts, loaded via a Google Fonts `<link>` in the root layout: `font-heading` (Playfair Display), `font-body` (Lato), `font-script` (Great Vibes)
+- No UI component library — everything is hand-built with Tailwind
+- No state management or form libraries — plain `useState`/`useEffect` and controlled inputs
+- HTML `lang` is `"ro"`; dates use `toLocaleDateString("ro-RO")`
+- Reusable bits in `globals.css`: `.thin-divider`, `.fade-in` / `.fade-in.visible`, `.floral-border`
+
+## Known Issues
+
+- **API routes have no server-side authentication.** The admin password check happens client-side only. This is the largest outstanding gap and should be closed before the guest list fills up — it needs a real server-side session check in every `/api/*` handler.
+- **`src/app/layout.tsx` loads fonts via a Google Fonts `<link>`**, which ESLint flags (`@next/next/no-page-custom-font`). Migrating to `next/font` would remove the render-blocking request, but it changes font-loading behavior, so it hasn't been done.
+- **`react-hooks/set-state-in-effect` is suppressed in three places** — `Countdown.tsx`, `admin/layout.tsx`, `admin/tables/page.tsx`. Each is a legitimate client-only initialization (clock start, `sessionStorage` read, mount fetch) that the rule cannot distinguish from a cascading-render bug. Each suppression carries a comment explaining the constraint. Don't add more without the same justification.
+- **Roughly a dozen images in `public/images/` are unreferenced**, including everything the deleted gallery used. They were left in place because regenerating them costs Imagen credits.
+- `npx prisma generate` can fail with `EPERM` on Windows while the dev server holds the client DLL. Stop the dev server, regenerate, restart.
+- The legacy `Guest` fields (`plusOne`, `plusOneName`, `plusOneMenu`, `dietaryRestrictions`) still exist. Dropping them needs a migration and a check that no old rows still depend on them.
 
 ## Working Principles
 

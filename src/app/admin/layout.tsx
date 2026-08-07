@@ -60,9 +60,13 @@ export default function AdminLayout({
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
+    // sessionStorage does not exist during SSR, so auth state can only be
+    // resolved after mount.
+    /* eslint-disable react-hooks/set-state-in-effect */
     const stored = sessionStorage.getItem("admin_auth");
     if (stored === "true") setAuthenticated(true);
     setChecking(false);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   async function handleLogin(password: string) {

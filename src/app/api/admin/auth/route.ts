@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      console.error("ADMIN_PASSWORD is not set — refusing all admin logins");
+      return NextResponse.json({ error: "Admin login is not configured" }, { status: 503 });
+    }
+
     const { password } = await req.json();
-    const adminPassword = process.env.ADMIN_PASSWORD || "wedding2026";
 
     if (password === adminPassword) {
       return NextResponse.json({ success: true });

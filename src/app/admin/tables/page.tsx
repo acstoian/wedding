@@ -72,6 +72,8 @@ export default function TablesPage() {
   }, []);
 
   useEffect(() => {
+    // Initial load; fetchData resolves against the API and then sets state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 

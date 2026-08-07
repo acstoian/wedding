@@ -40,6 +40,9 @@ export default function Countdown() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
+    // Clock must start on the client only — seeding this during render would
+    // bake the server's timestamp into the HTML and mismatch on hydration.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTimeLeft(getTimeLeft());
     const timer = setInterval(() => setTimeLeft(getTimeLeft()), 1000);
     return () => clearInterval(timer);
