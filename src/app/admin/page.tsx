@@ -6,43 +6,45 @@ interface Guest {
   id: number;
   name: string;
   attending: string;
-  plusOne: boolean;
+  kidsCount: number | null;
 }
 
 interface Stats {
-  total: number;
   confirmed: number;
   declined: number;
   pending: number;
-  plusOnes: number;
+  kids: number;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ total: 0, confirmed: 0, declined: 0, pending: 0, plusOnes: 0 });
+  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0, kids: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/guests")
       .then((r) => r.json())
       .then((guests: Guest[]) => {
+        const attending = guests.filter((g) => g.attending === "yes");
         setStats({
-          total: guests.length,
-          confirmed: guests.filter((g) => g.attending === "yes").length,
+          // Every guest — primary or plus-one — is its own row, so these are
+          // people, not households.
+          confirmed: attending.length,
           declined: guests.filter((g) => g.attending === "no").length,
           pending: guests.filter((g) => g.attending === "pending").length,
-          plusOnes: guests.filter((g) => g.plusOne).length,
+          // Kids with their own chair are already rows above; kidsCount only
+          // holds the ones seated on a lap.
+          kids: attending.reduce((sum, g) => sum + (g.kidsCount ?? 0), 0),
         });
         setLoading(false);
       });
   }, []);
 
   const cards = [
-    { label: "Total Invitați", value: stats.total, color: "bg-burgundy", icon: "👥" },
-    { label: "Confirmați", value: stats.confirmed, color: "bg-sage-dark", icon: "✅" },
-    { label: "Refuzați", value: stats.declined, color: "bg-burnt-orange", icon: "❌" },
-    { label: "În așteptare", value: stats.pending, color: "bg-gold", icon: "⏳" },
-    { label: "Plus One", value: stats.plusOnes, color: "bg-burgundy-light", icon: "💑" },
-    { label: "Total Persoane", value: stats.confirmed + stats.plusOnes, color: "bg-sage", icon: "🎉" },
+    { label: "Total Persoane", value: stats.confirmed + stats.kids, icon: "🎉" },
+    { label: "Confirmați", value: stats.confirmed, icon: "✅" },
+    { label: "Copii fără scaun", value: stats.kids, icon: "🧸" },
+    { label: "Refuzați", value: stats.declined, icon: "❌" },
+    { label: "În așteptare", value: stats.pending, icon: "⏳" },
   ];
 
   return (
