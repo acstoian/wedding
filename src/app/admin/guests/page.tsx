@@ -84,10 +84,22 @@ export default function GuestsPage() {
 
   async function handleSave() {
     if (!editingId) return;
+    const name = (editData.name || "").trim();
+    if (!name) return;
+
     await fetch("/api/guests", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: editingId, ...editData }),
+      body: JSON.stringify({
+        id: editingId,
+        name,
+        // Blank inputs mean "not set", which the schema stores as null.
+        email: (editData.email || "").trim() || null,
+        attending: editData.attending,
+        menuPreference: editData.menuPreference || null,
+        allergies: (editData.allergies || "").trim() || null,
+        kidsCount: editData.kidsCount ?? null,
+      }),
     });
     setEditingId(null);
     setEditData({});
@@ -100,9 +112,9 @@ export default function GuestsPage() {
       name: guest.name,
       email: guest.email,
       attending: guest.attending,
-      plusOne: guest.plusOne,
-      plusOneName: guest.plusOneName,
-      dietaryRestrictions: guest.dietaryRestrictions,
+      menuPreference: guest.menuPreference,
+      allergies: guest.allergies,
+      kidsCount: guest.kidsCount,
     });
   }
 
@@ -220,7 +232,14 @@ export default function GuestsPage() {
                             <input
                               value={editData.name || ""}
                               onChange={(e) => setEditData({ ...editData, name: e.target.value })}
-                              className="border rounded px-2 py-1 w-full text-sm"
+                              placeholder="nume"
+                              className="border rounded px-2 py-1 w-full text-sm min-w-[140px]"
+                            />
+                            <input
+                              value={editData.email || ""}
+                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
+                              placeholder="email"
+                              className="border rounded px-2 py-1 w-full text-xs mt-1"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -234,15 +253,51 @@ export default function GuestsPage() {
                               <option value="pending">În așteptare</option>
                             </select>
                           </td>
-                          <td className="px-4 py-3" colSpan={5}>
+                          <td className="px-4 py-3">
+                            <select
+                              value={editData.menuPreference || ""}
+                              onChange={(e) => setEditData({ ...editData, menuPreference: e.target.value })}
+                              className="border rounded px-2 py-1 text-sm"
+                            >
+                              <option value="">—</option>
+                              <option value="Normal">Normal</option>
+                              <option value="Vegetarian">Vegetarian</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs italic">
+                            {isExtra ? `cu ${group.primary.name}` : "—"}
+                          </td>
+                          <td className="px-4 py-3">
                             <input
-                              value={editData.email || ""}
-                              onChange={(e) => setEditData({ ...editData, email: e.target.value })}
-                              placeholder="email"
-                              className="border rounded px-2 py-1 text-sm w-full"
+                              value={editData.allergies || ""}
+                              onChange={(e) => setEditData({ ...editData, allergies: e.target.value })}
+                              placeholder="alergii"
+                              className="border rounded px-2 py-1 text-sm w-full min-w-[120px]"
                             />
                           </td>
                           <td className="px-4 py-3">
+                            {/* kidsCount is household-level, so only the primary carries it */}
+                            {isExtra ? (
+                              <span className="text-gray-300 text-xs">—</span>
+                            ) : (
+                              <input
+                                type="number"
+                                min={0}
+                                value={editData.kidsCount ?? ""}
+                                onChange={(e) =>
+                                  setEditData({
+                                    ...editData,
+                                    kidsCount: e.target.value === "" ? null : Math.max(0, parseInt(e.target.value) || 0),
+                                  })
+                                }
+                                className="border rounded px-2 py-1 text-sm w-16"
+                              />
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs">
+                            {guest.table?.name || "—"}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
                             <button onClick={handleSave} className="text-green-600 hover:text-green-800 mr-2 text-sm">
                               Salvează
                             </button>
