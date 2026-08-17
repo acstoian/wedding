@@ -207,7 +207,7 @@ export default function RsvpForm() {
         <p className="text-gold text-xs uppercase tracking-[0.25em] font-body mb-2">Confirmă Prezența</p>
         <h2 className="font-heading text-2xl md:text-3xl mb-1">Ești cu noi?</h2>
         <p className="text-burgundy/40 text-xs font-body mb-8">
-          Te rugăm să confirmi până la <strong>1 August 2026</strong>
+          Te rugăm să confirmi până la <strong>1 Septembrie 2026</strong>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
