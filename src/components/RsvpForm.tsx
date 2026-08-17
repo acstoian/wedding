@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type GuestCount = "" | "0" | "1" | "2" | "3" | "4";
+type GuestCount = "" | "1" | "2" | "3" | "4";
 type MenuType = "Normal" | "Vegetarian";
 
 const LABELS = ["", "Însoțitor 1", "Însoțitor 2", "Însoțitor 3"];
@@ -72,6 +72,7 @@ function downloadIcs() {
 }
 
 export default function RsvpForm() {
+  const [rsvpChoice, setRsvpChoice] = useState<"" | "yes" | "no">("");
   const [guestCount, setGuestCount] = useState<GuestCount>("");
   const [name1, setName1] = useState("");
   const [menu1, setMenu1] = useState<MenuType>("Normal");
@@ -90,9 +91,11 @@ export default function RsvpForm() {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
-  const count = guestCount === "" || guestCount === "0" ? 0 : parseInt(guestCount);
-  const attending = count > 0;
+  const attending = rsvpChoice === "yes";
+  const count = attending && guestCount !== "" ? parseInt(guestCount) : 0;
   const extraCount = Math.max(0, count - 1);
+  // Declines only need a name; acceptances also need a head count.
+  const formReady = rsvpChoice === "no" || (attending && guestCount !== "");
 
   function updateExtra<K extends keyof typeof blankExtra>(
     i: number,
@@ -127,7 +130,7 @@ export default function RsvpForm() {
         body: JSON.stringify({
           attending: attending ? "yes" : "no",
           primary: {
-            name: name1 || "Anonim",
+            name: name1.trim(),
             menuPreference: attending ? menu1 : null,
             allergies: hasAllergies1 && allergies1.trim() ? allergies1.trim() : null,
           },
@@ -211,42 +214,75 @@ export default function RsvpForm() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5 text-left">
-          {/* Guest count */}
+          {/* Attending or not */}
           <div>
             <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
-              Număr de invitați *
+              Vei participa? *
             </label>
-            <select
-              required
-              value={guestCount}
-              onChange={(e) => setGuestCount(e.target.value as GuestCount)}
-              className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
-            >
-              <option value="" disabled>Selectează...</option>
-              <option value="1">1 invitat</option>
-              <option value="2">2 invitați</option>
-              <option value="3">3 invitați</option>
-              <option value="4">4 invitați</option>
-              <option value="0">Nu voi participa</option>
-            </select>
+            <div className="flex gap-2">
+              {(
+                [
+                  { value: "yes", label: "Da, voi participa" },
+                  { value: "no", label: "Nu voi participa" },
+                ] as const
+              ).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setRsvpChoice(opt.value)}
+                  className={`flex-1 py-2.5 rounded-xl border text-xs font-body transition-all ${
+                    rsvpChoice === opt.value
+                      ? "border-gold bg-gold text-white"
+                      : "border-gold/30 text-burgundy/60 hover:border-gold/60"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
+
+          {/* Guest count */}
+          {attending && (
+            <div>
+              <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
+                Număr de invitați *
+              </label>
+              <select
+                required
+                value={guestCount}
+                onChange={(e) => setGuestCount(e.target.value as GuestCount)}
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
+              >
+                <option value="" disabled>Selectează...</option>
+                <option value="1">1 invitat</option>
+                <option value="2">2 invitați</option>
+                <option value="3">3 invitați</option>
+                <option value="4">4 invitați</option>
+              </select>
+            </div>
+          )}
+
+          {/* Asked on both paths, so a decline records who it was */}
+          {rsvpChoice !== "" && (
+            <div>
+              <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
+                Numele tău *
+              </label>
+              <input
+                required
+                type="text"
+                value={name1}
+                onChange={(e) => setName1(e.target.value)}
+                placeholder="Prenume Nume"
+                className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
+              />
+            </div>
+          )}
 
           {/* Primary guest */}
           {attending && (
             <>
-              <div>
-                <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
-                  Numele tău *
-                </label>
-                <input
-                  required
-                  type="text"
-                  value={name1}
-                  onChange={(e) => setName1(e.target.value)}
-                  placeholder="Prenume Nume"
-                  className="w-full px-4 py-3 rounded-xl bg-white border border-gold/30 text-burgundy placeholder:text-burgundy/30 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-colors font-body text-base"
-                />
-              </div>
               <div>
                 <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
                   Meniu *
@@ -443,7 +479,7 @@ export default function RsvpForm() {
           )}
 
           {/* Message */}
-          {guestCount !== "" && (
+          {formReady && (
             <div>
               <label className="block text-xs uppercase tracking-[0.2em] text-burgundy/50 font-body mb-2">
                 Mesaj (opțional)
@@ -458,7 +494,7 @@ export default function RsvpForm() {
             </div>
           )}
 
-          {guestCount !== "" && (
+          {formReady && (
             <button
               type="submit"
               disabled={status === "loading"}

@@ -12,12 +12,11 @@ interface Guest {
 interface Stats {
   confirmed: number;
   declined: number;
-  pending: number;
   kids: number;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, pending: 0, kids: 0 });
+  const [stats, setStats] = useState<Stats>({ confirmed: 0, declined: 0, kids: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,7 +29,6 @@ export default function AdminDashboard() {
           // people, not households.
           confirmed: attending.length,
           declined: guests.filter((g) => g.attending === "no").length,
-          pending: guests.filter((g) => g.attending === "pending").length,
           // Kids with their own chair are already rows above; kidsCount only
           // holds the ones seated on a lap.
           kids: attending.reduce((sum, g) => sum + (g.kidsCount ?? 0), 0),
@@ -44,7 +42,6 @@ export default function AdminDashboard() {
     { label: "Confirmați", value: stats.confirmed, icon: "✅" },
     { label: "Copii fără scaun", value: stats.kids, icon: "🧸" },
     { label: "Refuzați", value: stats.declined, icon: "❌" },
-    { label: "În așteptare", value: stats.pending, icon: "⏳" },
   ];
 
   return (
