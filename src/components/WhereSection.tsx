@@ -22,7 +22,7 @@ const EVENTS: EventCard[] = [
     type: "Recepția",
     venue: "Zooma Paradisul Verde",
     address: "Aleea Paradisul Verde 6, 077066 Ostratu",
-    time: "ora 19:00",
+    time: "ora 18:00",
     mapQuery: "Zooma Paradisul Verde Aleea Paradisul Verde 6 Ostratu",
   },
 ];

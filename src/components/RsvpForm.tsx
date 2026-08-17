@@ -18,7 +18,7 @@ const EVENT = {
   location: "Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni",
   description:
     "Cununia religioasă · 16:00 · Biserica-unicat a Ordinului Carmelitanilor Desculți, DJ101B 54, 077166 Ciofliceni\n" +
-    "Recepția · 19:00 · Zooma Paradisul Verde, Aleea Paradisul Verde 6, 077066 Ostratu",
+    "Recepția · 18:00 · Zooma Paradisul Verde, Aleea Paradisul Verde 6, 077066 Ostratu",
 };
 
 function googleCalendarUrl() {
